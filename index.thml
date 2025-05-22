@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Réflexe Rapide !</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .game-area {
+            min-height: 400px; /* Minimum height for the game area */
+            background-color: #f8f8f8; /* Light background for game area */
+            cursor: pointer;
+            border-radius: 0.5rem; /* Tailwind's rounded-lg */
+        }
+        .reaction-shape {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            border-radius: 50%; /* Makes it a circle */
+            background-color: #EF4444; /* Tailwind red-500, initial color */
+            cursor: pointer;
+        }
+        /* Custom styles for the selected vibrant palette - "Energetic & Playful" (Yellow, Teal, Purple) */
+        .header-bg {
+            background-color: #FFD700; /* Yellow */
+        }
+        .btn-primary {
+            background-color: #00CED1; /* Dark Turquoise/Teal */
+            color: #FFFFFF;
+        }
+        .btn-primary:hover {
+            background-color: #00BFFF; /* Deep Sky Blue - slightly lighter teal */
+        }
+        .text-accent {
+            color: #8A2BE2; /* Blue Violet/Purple */
+        }
+        .text-primary {
+            color: #00CED1; /* Dark Turquoise/Teal */
+        }
+        .shape-active {
+            background-color: #8A2BE2; /* Blue Violet/Purple when active */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+    <div class="min-h-screen flex items-center justify-center py-10 px-4">
+        <div class="bg-white p-8 rounded-lg shadow-xl max-w-2xl w-full text-center">
+            <header class="header-bg py-4 rounded-t-lg -mx-8 -mt-8 mb-6">
+                <h1 class="text-3xl font-bold text-gray-800">Réflexe Rapide !</h1>
+            </header>
+
+            <section id="game-intro" class="mb-6">
+                <p class="text-lg text-gray-700 mb-4">Cliquez sur le bouton "Démarrer le jeu", attendez que la forme change de couleur, puis cliquez dessus le plus vite possible !</p>
+                <button id="startButton" class="btn-primary py-3 px-8 rounded-full text-xl font-semibold shadow-lg hover:shadow-xl transition duration-300 ease-in-out">
+                    Démarrer le jeu
+                </button>
+            </section>
+
+            <section id="game-area" class="game-area relative flex items-center justify-center rounded-lg shadow-inner border border-gray-200">
+                <div id="waitMessage" class="text-xl text-gray-500 font-medium">Cliquez sur "Démarrer"</div>
+                <div id="reactionShape" class="reaction-shape"></div>
+            </section>
+
+            <section id="results" class="mt-6 text-xl text-gray-800">
+                <p id="reactionTimeDisplay" class="font-bold hidden">Votre temps de réaction : <span class="text-accent"></span> ms</p>
+                <button id="resetButton" class="btn-primary py-2 px-6 rounded-full text-lg font-semibold mt-4 hidden">
+                    Rejouer
+                </button>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const startButton = document.getElementById('startButton');
+        const resetButton = document.getElementById('resetButton');
+        const gameArea = document.getElementById('game-area');
+        const waitMessage = document.getElementById('waitMessage');
+        const reactionShape = document.getElementById('reactionShape');
+        const reactionTimeDisplay = document.getElementById('reactionTimeDisplay');
+        const reactionTimeSpan = reactionTimeDisplay.querySelector('span');
+
+        let startTime;
+        let timeoutId;
+        let gameStarted = false;
+
+        function startGame() {
+            gameStarted = true;
+            startButton.classList.add('hidden');
+            resetButton.classList.add('hidden');
+            reactionTimeDisplay.classList.add('hidden');
+            waitMessage.textContent = 'Attendez...';
+            waitMessage.classList.remove('hidden');
+            reactionShape.classList.remove('shape-active');
+            reactionShape.style.display = 'none';
+
+            const delay = Math.random() * 2000 + 1000; // Random delay between 1000ms (1s) and 3000ms (3s)
+
+            timeoutId = setTimeout(() => {
+                waitMessage.classList.add('hidden');
+                reactionShape.style.display = 'block';
+                reactionShape.classList.add('shape-active');
+                startTime = new Date().getTime(); // Record start time when shape appears
+            }, delay);
+        }
+
+        function recordReactionTime() {
+            if (!gameStarted) return; // Prevent clicks before game starts or during wait
+            
+            clearTimeout(timeoutId); // Stop the timeout if user clicks early (though current logic prevents shape display)
+            const endTime = new Date().getTime();
+            const reactionTime = endTime - startTime;
+
+            reactionShape.style.display = 'none';
+            reactionShape.classList.remove('shape-active');
+            waitMessage.classList.remove('hidden'); // Show wait message again
+            waitMessage.textContent = 'Cliquez sur "Démarrer"'; // Reset message
+
+            reactionTimeSpan.textContent = reactionTime;
+            reactionTimeDisplay.classList.remove('hidden');
+            resetButton.classList.remove('hidden');
+            gameStarted = false; // Reset game state
+        }
+
+        startButton.addEventListener('click', startGame);
+        resetButton.addEventListener('click', startGame);
+        reactionShape.addEventListener('click', recordReactionTime);
+
+        // Optional: If user clicks before the shape appears
+        gameArea.addEventListener('click', (event) => {
+            if (gameStarted && reactionShape.style.display === 'none') {
+                clearTimeout(timeoutId);
+                reactionTimeSpan.textContent = 'Trop tôt !';
+                reactionTimeDisplay.classList.remove('hidden');
+                resetButton.classList.remove('hidden');
+                gameStarted = false;
+                waitMessage.textContent = 'Cliquez sur "Démarrer"'; // Reset message
+            }
+        });
+    </script>
+</body>
+</html>
